@@ -16,8 +16,8 @@ A full-stack Next.js application designed for administrators to manage product i
 
 ## 🔑 Admin Credentials (For Verification)
 To access the dashboard, use the following dummy credentials:
-* **Username:** admin
-* **Password:** password123
+* **Username:** manager
+* **Password:** access2025
 
 ## ⚙️ Workflow
 1.  **Request:** Admin accesses the secure URL.

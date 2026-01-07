@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CldUploadWidget } from "next-cloudinary";
 import { z } from "zod";
 
 const productSchema = z.object({
   name: z.string().min(3, "Name too short"),
   category: z.string().min(3, "Category too short"),
-  price: z.coerce.number().min(1, "Min price $1"),
-  stock: z.coerce.number().min(0, "Stock cannot be negative"),
+  price: z.coerce.number().min(1, "Price must be ≥ 1"),
+  stock: z.coerce.number().min(0, "Stock must be ≥ 0"),
   description: z.string().optional(),
   imageUrl: z.string().optional(),
 });
@@ -17,7 +16,7 @@ const productSchema = z.object({
 export default function ProductForm() {
   const router = useRouter();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<any>({
     name: "",
     category: "",
     price: "",
@@ -36,9 +35,10 @@ export default function ProductForm() {
 
     if (!result.success) {
       const formatted: any = {};
-      result.error.issues.forEach((issue) => {
+      result.error.issues.forEach((issue: any) => {
         formatted[issue.path[0]] = issue.message;
       });
+
       setErrors(formatted);
       return;
     }
@@ -48,10 +48,19 @@ export default function ProductForm() {
 
     const res = await fetch("/api/products", {
       method: "POST",
+
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(result.data),
+
+      body: JSON.stringify({
+        name: formData.name,
+        category: formData.category,
+        price: formData.price,
+        stock: formData.stock,
+        description: formData.description,
+        imageUrl: formData.imageUrl,
+      }),
     });
 
     if (res.ok) {
@@ -67,10 +76,13 @@ export default function ProductForm() {
       });
 
       setStatus("success");
-      setTimeout(() => setStatus("idle"), 2500);
+
+      setTimeout(() => {
+        setStatus("idle");
+      }, 2500);
     } else {
-      const err = await res.json();
-      setErrors({ api: err.error || "Save failed" });
+      const errText = await res.text();
+      setErrors({ api: errText });
       setStatus("idle");
     }
   };
@@ -79,6 +91,7 @@ export default function ProductForm() {
     <div className="panel-card w-full">
       <header className="mb-3 text-center">
         <h3 className="text-2xl font-extrabold">Create Item</h3>
+
         <p className="text-xs text-[var(--color-muted)]">
           Add inventory details
         </p>
@@ -93,8 +106,9 @@ export default function ProductForm() {
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="input-box w-full"
+              className="input-box w-full text-xs md:text-base"
             />
+
             {errors.name && (
               <p className="text-red-400 text-xs">{errors.name}</p>
             )}
@@ -107,8 +121,9 @@ export default function ProductForm() {
               onChange={(e) =>
                 setFormData({ ...formData, category: e.target.value })
               }
-              className="input-box w-full"
+              className="input-box w-full text-xs md:text-base"
             />
+
             {errors.category && (
               <p className="text-red-400 text-xs">
                 {errors.category}
@@ -126,8 +141,9 @@ export default function ProductForm() {
               onChange={(e) =>
                 setFormData({ ...formData, price: e.target.value })
               }
-              className="input-box w-full"
+              className="input-box w-full text-xs md:text-base"
             />
+
             {errors.price && (
               <p className="text-red-400 text-xs">{errors.price}</p>
             )}
@@ -141,8 +157,9 @@ export default function ProductForm() {
               onChange={(e) =>
                 setFormData({ ...formData, stock: e.target.value })
               }
-              className="input-box w-full"
+              className="input-box w-full text-xs md:text-base"
             />
+
             {errors.stock && (
               <p className="text-red-400 text-xs">{errors.stock}</p>
             )}
@@ -154,51 +171,45 @@ export default function ProductForm() {
             placeholder="Notes (optional)"
             value={formData.description}
             onChange={(e) =>
-              setFormData({
-                ...formData,
-                description: e.target.value,
-              })
+              setFormData({ ...formData, description: e.target.value })
             }
-            className="input-box w-full h-24"
+            className="input-box w-full h-24 text-xs md:text-base"
           />
+
+          {errors.description && (
+            <p className="text-red-400 text-xs">
+              {errors.description}
+            </p>
+          )}
         </div>
 
-        <CldUploadWidget
-          uploadPreset="ml_default"
-          onSuccess={(result: any) =>
-            setFormData((prev) => ({
-              ...prev,
-              imageUrl: result.info.secure_url,
-            }))
-          }
-        >
-          {({ open }) => (
-            <button
-              type="button"
-              onClick={() => open()}
-              className="btn-primary bg-slate-100 w-full text-xs md:text-base"
-            >
-              Upload Item Image
-            </button>
-          )}
-        </CldUploadWidget>
+        <div>
+          <input
+            placeholder="Image URL"
+            value={formData.imageUrl}
+            onChange={(e) =>
+              setFormData({ ...formData, imageUrl: e.target.value })
+            }
+            className="input-box w-full text-xs md:text-base"
+          />
+        </div>
 
         <button
           type="submit"
           disabled={status === "saving"}
-          className="btn-primary bg-black text-white w-full"
+          className="btn-primary w-full bg-black text-white text-xs md:text-base"
         >
           {status === "saving" ? "Saving..." : "Submit Item"}
         </button>
 
         {errors.api && (
-          <p className="text-red-500 text-xs text-center">
+          <p className="text-red-400 text-xs text-center">
             {errors.api}
           </p>
         )}
 
         {errors.api && (
-          <p className="text-red-500 text-xs text-center">
+          <p className="text-red-400 text-xs text-center">
             {errors.api}
           </p>
         )}
@@ -210,6 +221,12 @@ export default function ProductForm() {
             Item Saved Successfully
           </p>
         </div>
+      )}
+
+      {errors.api && (
+        <p className="text-red-400 text-xs text-center">
+          {errors.api}
+        </p>
       )}
     </div>
   );
