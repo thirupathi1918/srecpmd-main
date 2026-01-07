@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const { name, category, price, stock, description, imageUrl } = body;
 
     // 2. Validate data (Simple check)
-    if (!name || !price || !stock) {
+    if (!name || price === undefined || stock === undefined) {
       return NextResponse.json(
         { error: "Name, Price, and Stock are required" },
         { status: 400 }
