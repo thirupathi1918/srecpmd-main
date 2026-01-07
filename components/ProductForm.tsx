@@ -7,7 +7,7 @@ import { z } from "zod";
 const productSchema = z.object({
   name: z.string().min(3, "Name too short"),
   category: z.string().min(3, "Category too short"),
-  price: z.coerce.number().min(1, "Price must be ≥ 1"),
+  price: z.coerce.number().min(0, "Price must not be negative"),
   stock: z.coerce.number().min(0, "Stock must be ≥ 0"),
   description: z.string().optional(),
   imageUrl: z.string().optional(),
