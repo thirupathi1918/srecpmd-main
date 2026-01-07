@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 
@@ -16,7 +16,7 @@ const productSchema = z.object({
 export default function ProductForm() {
   const router = useRouter();
 
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState({
     name: "",
     category: "",
     price: "",
@@ -25,18 +25,29 @@ export default function ProductForm() {
     imageUrl: "",
   });
 
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "saving" | "success">("idle");
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const result = productSchema.safeParse(formData);
+    // 🟢 Validate the SAME payload you send to API
+    const payload = {
+      name: formData.name,
+      category: formData.category,
+      price: formData.price,
+      stock: formData.stock,
+      description: formData.description,
+      imageUrl: formData.imageUrl,
+    };
+
+    const result = productSchema.safeParse(payload);
 
     if (!result.success) {
-      const formatted: any = {};
-      result.error.issues.forEach((issue: any) => {
-        formatted[issue.path[0]] = issue.message;
+      const formatted: Record<string, string> = {};
+
+      result.error.issues.forEach((issue) => {
+        formatted[String(issue.path[0])] = issue.message;
       });
 
       setErrors(formatted);
@@ -46,43 +57,40 @@ export default function ProductForm() {
     setErrors({});
     setStatus("saving");
 
-    const res = await fetch("/api/products", {
-      method: "POST",
+    try {
+      const res = await fetch("/api/products", {
+        method: "POST",
 
-      headers: {
-        "Content-Type": "application/json",
-      },
+        headers: {
+          "Content-Type": "application/json",
+        },
 
-      body: JSON.stringify({
-        name: formData.name,
-        category: formData.category,
-        price: formData.price,
-        stock: formData.stock,
-        description: formData.description,
-        imageUrl: formData.imageUrl,
-      }),
-    });
-
-    if (res.ok) {
-      router.refresh();
-
-      setFormData({
-        name: "",
-        category: "",
-        price: "",
-        stock: "",
-        description: "",
-        imageUrl: "",
+        body: JSON.stringify(payload),
       });
 
-      setStatus("success");
+      if (res.ok) {
+        // optional UI update
+        router.refresh();
 
-      setTimeout(() => {
-        setStatus("idle");
-      }, 2500);
-    } else {
-      const errText = await res.text();
-      setErrors({ api: errText });
+        setFormData({
+          name: "",
+          category: "",
+          price: "",
+          stock: "",
+          description: "",
+          imageUrl: "",
+        });
+
+        setStatus("success");
+        setTimeout(() => setStatus("idle"), 2500);
+      } else {
+        // expect API error text/json
+        const text = await res.text();
+        setErrors({ api: text || "Failed to create product" });
+      }
+    } catch (err: any) {
+      setErrors({ api: err.message || "Network error" });
+    } finally {
       setStatus("idle");
     }
   };
@@ -91,7 +99,6 @@ export default function ProductForm() {
     <div className="panel-card w-full">
       <header className="mb-3 text-center">
         <h3 className="text-2xl font-extrabold">Create Item</h3>
-
         <p className="text-xs text-[var(--color-muted)]">
           Add inventory details
         </p>
@@ -161,7 +168,9 @@ export default function ProductForm() {
             />
 
             {errors.stock && (
-              <p className="text-red-400 text-xs">{errors.stock}</p>
+              <p className="text-red-400 text-xs">
+                {errors.stock}
+              </p>
             )}
           </div>
         </div>
@@ -171,7 +180,10 @@ export default function ProductForm() {
             placeholder="Notes (optional)"
             value={formData.description}
             onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
+              setFormData({
+                ...formData,
+                description: e.target.value,
+              })
             }
             className="input-box w-full h-24 text-xs md:text-base"
           />
@@ -188,7 +200,10 @@ export default function ProductForm() {
             placeholder="Image URL"
             value={formData.imageUrl}
             onChange={(e) =>
-              setFormData({ ...formData, imageUrl: e.target.value })
+              setFormData({
+                ...formData,
+                imageUrl: e.target.value,
+              })
             }
             className="input-box w-full text-xs md:text-base"
           />
@@ -207,12 +222,6 @@ export default function ProductForm() {
             {errors.api}
           </p>
         )}
-
-        {errors.api && (
-          <p className="text-red-400 text-xs text-center">
-            {errors.api}
-          </p>
-        )}
       </form>
 
       {status === "success" && (
@@ -221,12 +230,6 @@ export default function ProductForm() {
             Item Saved Successfully
           </p>
         </div>
-      )}
-
-      {errors.api && (
-        <p className="text-red-400 text-xs text-center">
-          {errors.api}
-        </p>
       )}
     </div>
   );
