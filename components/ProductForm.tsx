@@ -1,15 +1,17 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CldUploadWidget } from "next-cloudinary";
 import { z } from "zod";
 
 const productSchema = z.object({
-  name: z.string().min(3),
-  category: z.string().min(3),
-  price: z.coerce.number().min(1),
-  stock: z.coerce.number().min(0),
+  name: z.string().min(3, "Name too short"),
+  category: z.string().min(3, "Category too short"),
+  price: z.coerce.number().min(1, "Min price $1"),
+  stock: z.coerce.number().min(0, "Stock cannot be negative"),
   description: z.string().optional(),
+  imageUrl: z.string().optional(),
 });
 
 export default function ProductForm() {
@@ -31,6 +33,7 @@ export default function ProductForm() {
     e.preventDefault();
 
     const result = productSchema.safeParse(formData);
+
     if (!result.success) {
       const formatted: any = {};
       result.error.issues.forEach((issue) => {
@@ -45,7 +48,10 @@ export default function ProductForm() {
 
     const res = await fetch("/api/products", {
       method: "POST",
-      body: JSON.stringify(formData),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(result.data),
     });
 
     if (res.ok) {
@@ -62,6 +68,10 @@ export default function ProductForm() {
 
       setStatus("success");
       setTimeout(() => setStatus("idle"), 2500);
+    } else {
+      const err = await res.json();
+      setErrors({ api: err.error || "Save failed" });
+      setStatus("idle");
     }
   };
 
@@ -83,7 +93,7 @@ export default function ProductForm() {
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="input-box w-full text-xs md:text-base"
+              className="input-box w-full"
             />
             {errors.name && (
               <p className="text-red-400 text-xs">{errors.name}</p>
@@ -97,7 +107,7 @@ export default function ProductForm() {
               onChange={(e) =>
                 setFormData({ ...formData, category: e.target.value })
               }
-              className="input-box w-full text-xs md:text-base"
+              className="input-box w-full"
             />
             {errors.category && (
               <p className="text-red-400 text-xs">
@@ -116,8 +126,11 @@ export default function ProductForm() {
               onChange={(e) =>
                 setFormData({ ...formData, price: e.target.value })
               }
-              className="input-box w-full text-xs md:text-base"
+              className="input-box w-full"
             />
+            {errors.price && (
+              <p className="text-red-400 text-xs">{errors.price}</p>
+            )}
           </div>
 
           <div>
@@ -128,8 +141,11 @@ export default function ProductForm() {
               onChange={(e) =>
                 setFormData({ ...formData, stock: e.target.value })
               }
-              className="input-box w-full text-xs md:text-base"
+              className="input-box w-full"
             />
+            {errors.stock && (
+              <p className="text-red-400 text-xs">{errors.stock}</p>
+            )}
           </div>
         </div>
 
@@ -138,9 +154,12 @@ export default function ProductForm() {
             placeholder="Notes (optional)"
             value={formData.description}
             onChange={(e) =>
-              setFormData({ ...formData, description: e.target.value })
+              setFormData({
+                ...formData,
+                description: e.target.value,
+              })
             }
-            className="input-box w-full h-24 text-xs md:text-base"
+            className="input-box w-full h-24"
           />
         </div>
 
@@ -167,10 +186,22 @@ export default function ProductForm() {
         <button
           type="submit"
           disabled={status === "saving"}
-          className="btn-primary bg-black text-white w-full text-xs md:text-base"
+          className="btn-primary bg-black text-white w-full"
         >
           {status === "saving" ? "Saving..." : "Submit Item"}
         </button>
+
+        {errors.api && (
+          <p className="text-red-500 text-xs text-center">
+            {errors.api}
+          </p>
+        )}
+
+        {errors.api && (
+          <p className="text-red-500 text-xs text-center">
+            {errors.api}
+          </p>
+        )}
       </form>
 
       {status === "success" && (
