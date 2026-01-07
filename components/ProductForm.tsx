@@ -31,7 +31,6 @@ export default function ProductForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 🟢 Validate the SAME payload you send to API
     const payload = {
       name: formData.name,
       category: formData.category,
@@ -60,16 +59,13 @@ export default function ProductForm() {
     try {
       const res = await fetch("/api/products", {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify(payload),
       });
 
       if (res.ok) {
-        // optional UI update
         router.refresh();
 
         setFormData({
@@ -84,13 +80,16 @@ export default function ProductForm() {
         setStatus("success");
         setTimeout(() => setStatus("idle"), 2500);
       } else {
-        // expect API error text/json
         const text = await res.text();
-        setErrors({ api: text || "Failed to create product" });
+        setErrors({
+          api: text || "Failed to create product",
+        });
+        setStatus("idle");
       }
     } catch (err: any) {
-      setErrors({ api: err.message || "Network error" });
-    } finally {
+      setErrors({
+        api: err.message || "Network error",
+      });
       setStatus("idle");
     }
   };
@@ -115,7 +114,6 @@ export default function ProductForm() {
               }
               className="input-box w-full text-xs md:text-base"
             />
-
             {errors.name && (
               <p className="text-red-400 text-xs">{errors.name}</p>
             )}
@@ -130,7 +128,6 @@ export default function ProductForm() {
               }
               className="input-box w-full text-xs md:text-base"
             />
-
             {errors.category && (
               <p className="text-red-400 text-xs">
                 {errors.category}
@@ -150,9 +147,10 @@ export default function ProductForm() {
               }
               className="input-box w-full text-xs md:text-base"
             />
-
             {errors.price && (
-              <p className="text-red-400 text-xs">{errors.price}</p>
+              <p className="text-red-400 text-xs">
+                {errors.price}
+              </p>
             )}
           </div>
 
@@ -166,7 +164,6 @@ export default function ProductForm() {
               }
               className="input-box w-full text-xs md:text-base"
             />
-
             {errors.stock && (
               <p className="text-red-400 text-xs">
                 {errors.stock}
@@ -187,12 +184,6 @@ export default function ProductForm() {
             }
             className="input-box w-full h-24 text-xs md:text-base"
           />
-
-          {errors.description && (
-            <p className="text-red-400 text-xs">
-              {errors.description}
-            </p>
-          )}
         </div>
 
         <div>
