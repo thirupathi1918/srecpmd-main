@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f7fc;
+  --foreground: #0f172a;
+  --primary: #2563eb;
+  --secondary: #7c3aed;
+  --card: #ffffff;
+  --muted: #64748b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #020617;
+    --foreground: #e2e8f0;
+    --card: #0b1221;
+    --muted: #94a3b8;
+  }
+}
+
+body {
+  background: linear-gradient(135deg, var(--background), #e0e7ff);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  letter-spacing: 0.3px;
+}
+
+.panel-card {
+  @apply rounded-2xl shadow-lg border p-4 bg-white dark:bg-slate-900;
+}
+
+.btn-primary {
+  @apply px-4 py-2 rounded-xl font-semibold transition-all duration-300 hover:scale-[1.03] active:scale-[0.98];
+}
+
+.input-box {
+  @apply rounded-xl border focus:ring-2 outline-none px-3 py-2;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-100 dark:bg-slate-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply rounded-full;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: fadeUp 0.5s ease;
+}
