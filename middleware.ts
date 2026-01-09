@@ -1,23 +1,29 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
-  const token = req.cookies.get('auth_token');
   const { pathname } = req.nextUrl;
 
-  // If trying to access dashboard ('/') without token, go to login
-  if (pathname === '/' && !token) {
-    return NextResponse.redirect(new URL('/login', req.url));
+  // ✅ NEVER run middleware for API routes
+  if (pathname.startsWith("/api")) {
+    return NextResponse.next();
   }
 
-  // If already logged in and trying to access login, go to dashboard
-  if (pathname === '/login' && token) {
-    return NextResponse.redirect(new URL('/', req.url));
+  const token = req.cookies.get("auth_token");
+
+  // Protect dashboard
+  if (pathname === "/" && !token) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  // Prevent logged-in users from seeing login
+  if (pathname === "/login" && token) {
+    return NextResponse.redirect(new URL("/", req.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/', '/login'],
+  matcher: ["/", "/login", "/((?!_next|favicon.ico).*)"],
 };
