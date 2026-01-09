@@ -1,25 +1,19 @@
-import mongoose from "mongoose";
+import mongoose, { Schema, model, models } from "mongoose";
 
-const ProductSchema = new mongoose.Schema(
+const ProductSchema = new Schema(
   {
-    name: { type: String, required: true, maxlength: 60 },
-
-    category: { type: String, required: false },
-
+    name: { type: String, required: true },
+    category: { type: String },
     price: { type: Number, required: true, min: 0 },
-
     stock: { type: Number, required: true, min: 0 },
-
     sales: { type: Number, default: 0 },
-
-    description: { type: String, required: false },
-
-    imageUrl: { type: String, required: false },
+    description: { type: String },
+    imageUrl: { type: String },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-export default mongoose.models.Product ||
-  mongoose.model("Product", ProductSchema);
+// ✅ VERY IMPORTANT FOR VERCEL
+const Product = models.Product || model("Product", ProductSchema);
+
+export default Product;

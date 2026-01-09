@@ -9,10 +9,7 @@ if (!MONGODB_URI) {
 let cached = (global as any).mongoose;
 
 if (!cached) {
-  cached = (global as any).mongoose = {
-    conn: null,
-    promise: null,
-  };
+  cached = (global as any).mongoose = { conn: null, promise: null };
 }
 
 export default async function connectDB() {
@@ -20,7 +17,6 @@ export default async function connectDB() {
 
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI, {
-      dbName: "srec",       // ✅ VERY IMPORTANT
       bufferCommands: false,
     });
   }
